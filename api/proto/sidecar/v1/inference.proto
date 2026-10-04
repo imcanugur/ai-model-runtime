@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package sidecar.v1;
+
+option go_package = "github.com/imcanugur/ai-model-runtime/internal/runtime/sidecar/proto;sidecarv1";
+
+// DataType represents the primitive element type of a tensor.
+enum DataType {
+  DATA_TYPE_UNSPECIFIED = 0;
+  DATA_TYPE_FLOAT32 = 1;
+  DATA_TYPE_INT64 = 2;
+  DATA_TYPE_INT32 = 3;
+}
+
+// Tensor represents an n-dimensional contiguous array with strict shape and raw data buffers.
+message Tensor {
+  DataType type = 1;
+  repeated int64 shape = 2;
+  repeated float data_f32 = 3;
+  repeated int64 data_i64 = 4;
+  repeated int32 data_i32 = 5;
+}
+
+// InferenceRequest encapsulates pure tensor inputs and model identity for external inference execution.
+message InferenceRequest {
+  string request_id = 1;
+  string model_key = 2;
+  map<string, Tensor> inputs = 3;
+  map<string, string> parameters = 4;
+}
+
+// InferenceResponse returns model inference outputs or a standardized execution failure message.
+message InferenceResponse {
+  string request_id = 1;
+  map<string, Tensor> outputs = 2;
+  string error = 3;
+}
+
+// PingRequest queries sidecar daemon health.
+message PingRequest {}
+
+// PingResponse indicates sidecar daemon readiness.
+message PingResponse {
+  bool ready = 1;
+  string version = 2;
+}
+
+// InferenceService provides a model-agnostic hardware tensor execution contract.
+service InferenceService {
+  rpc Infer(InferenceRequest) returns (InferenceResponse);
+  rpc Ping(PingRequest) returns (PingResponse);
+}
